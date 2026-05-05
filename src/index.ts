@@ -7,7 +7,6 @@ import { adminHandlers } from "./bot/handlers/admin";
 import { userHandlers } from "./bot/handlers/user";
 import { errorHandler } from "./bot/middlewares/errorHandler";
 import { loggerMiddleware } from "./bot/middlewares/logger";
-import { rateLimit } from "./bot/middlewares/rateLimit";
 import { config } from "./config";
 import { prisma } from "./db/client";
 import { MyContext, SessionData } from "./types";
@@ -15,7 +14,6 @@ import { MyContext, SessionData } from "./types";
 const bot = new Bot<MyContext>(config.BOT_TOKEN);
 
 bot.use(loggerMiddleware);
-bot.use(rateLimit);
 bot.use(
   session({
     initial: (): SessionData => ({}),

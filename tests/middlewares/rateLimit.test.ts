@@ -5,34 +5,29 @@ describe('rateLimit', () => {
     vi.resetModules()
   })
 
-  it('allows first 3 requests', async () => {
+  it('allows first 10 requests', async () => {
     const { rateLimitMap, rateLimit } = await import('../../src/bot/middlewares/rateLimit')
     rateLimitMap.clear()
 
     const next = vi.fn()
     const ctx = { from: { id: 111 }, reply: vi.fn() } as any
 
-    await rateLimit(ctx, next)
-    await rateLimit(ctx, next)
-    await rateLimit(ctx, next)
+    for (let i = 0; i < 10; i++) await rateLimit(ctx, next)
 
-    expect(next).toHaveBeenCalledTimes(3)
+    expect(next).toHaveBeenCalledTimes(10)
     expect(ctx.reply).not.toHaveBeenCalled()
   })
 
-  it('blocks 4th request', async () => {
+  it('blocks 11th request', async () => {
     const { rateLimitMap, rateLimit } = await import('../../src/bot/middlewares/rateLimit')
     rateLimitMap.clear()
 
     const next = vi.fn()
     const ctx = { from: { id: 222 }, reply: vi.fn() } as any
 
-    await rateLimit(ctx, next)
-    await rateLimit(ctx, next)
-    await rateLimit(ctx, next)
-    await rateLimit(ctx, next)
+    for (let i = 0; i < 11; i++) await rateLimit(ctx, next)
 
-    expect(next).toHaveBeenCalledTimes(3)
+    expect(next).toHaveBeenCalledTimes(10)
     expect(ctx.reply).toHaveBeenCalledWith(
       expect.stringContaining('Забагато запитів')
     )

@@ -18,7 +18,7 @@ export const rateLimit = async (ctx: MyContext, next: NextFunction): Promise<voi
   }
 
   entry.count++
-  if (entry.count > 3) {
+  if (entry.count > 10) {
     await ctx.reply('⚠️ Забагато запитів. Спробуйте через 10 хвилин.')
     return
   }

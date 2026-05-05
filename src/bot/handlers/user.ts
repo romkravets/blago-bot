@@ -9,9 +9,11 @@ import {
 import { MyContext } from "../../types";
 import { ticketKeyboard } from "../keyboards";
 import { logger } from "../middlewares/logger";
+import { rateLimit } from "../middlewares/rateLimit";
 
 export function userHandlers(bot: Bot<MyContext>): void {
-  bot.command("start", async (ctx) => {
+  // Rate limit тільки на /start та кнопку реєстрації — не на кроки wizard
+  bot.command("start", rateLimit, async (ctx) => {
     const telegramId = BigInt(ctx.from!.id);
     const activeEventId = await getConfig("activeEventId");
 
@@ -47,7 +49,7 @@ export function userHandlers(bot: Bot<MyContext>): void {
     );
   });
 
-  bot.callbackQuery("start_register", async (ctx) => {
+  bot.callbackQuery("start_register", rateLimit, async (ctx) => {
     await ctx.answerCallbackQuery();
     await ctx.conversation.enter("registerConversation");
   });
