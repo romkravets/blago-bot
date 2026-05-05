@@ -3,3 +3,6 @@ dist/
 .env
 prisma/blago.db
 prisma/blago.db-journal
+prisma/prisma/
+*.db
+*.db-journal
