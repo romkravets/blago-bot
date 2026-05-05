@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Config {
+  key   String @id
+  value String
+}
+
+model Event {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  status      String     @default("ACTIVE")
+  maxTickets  Int        @default(500)
+  createdAt   DateTime   @default(now())
+  donations   Donation[]
+}
+
+model Admin {
+  id         String   @id @default(uuid())
+  telegramId BigInt   @unique
+  username   String?
+  role       String   @default("ADMIN")
+  addedBy    BigInt
+  createdAt  DateTime @default(now())
+}
+
+model User {
+  id         String     @id @default(uuid())
+  telegramId BigInt     @unique
+  username   String?
+  firstName  String
+  lastName   String
+  phone      String
+  createdAt  DateTime   @default(now())
+  donations  Donation[]
+}
+
+model Donation {
+  id                String     @id @default(uuid())
+  eventId           String
+  userId            String
+  screenshotFileId  String?
+  screenshotHash    String?
+  status            String     @default("PENDING")
+  chosenTicket      Int?
+  external          Boolean    @default(false)
+  suspicious        Boolean    @default(false)
+  telegramMessageId BigInt?    @unique
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  event             Event      @relation(fields: [eventId], references: [id])
+  user              User       @relation(fields: [userId], references: [id])
+  logs              AuditLog[]
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  donationId String
+  action     String
+  actor      String
+  meta       String?
+  createdAt  DateTime @default(now())
+  donation   Donation @relation(fields: [donationId], references: [id])
+}
