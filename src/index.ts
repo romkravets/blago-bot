@@ -1,10 +1,15 @@
 import { Bot, session } from 'grammy'
-import { conversations } from '@grammyjs/conversations'
+import { conversations, createConversation } from '@grammyjs/conversations'
 import { config } from './config'
 import { MyContext, SessionData } from './types'
 import { loggerMiddleware } from './bot/middlewares/logger'
 import { rateLimit } from './bot/middlewares/rateLimit'
 import { errorHandler } from './bot/middlewares/errorHandler'
+import { registerConversation } from './bot/conversations/register'
+import { rejectDonationConversation } from './bot/conversations/rejectDonation'
+import { addDonorConversation } from './bot/conversations/addDonor'
+import { userHandlers } from './bot/handlers/user'
+import { adminHandlers } from './bot/handlers/admin'
 import { prisma } from './db/client'
 
 const bot = new Bot<MyContext>(config.BOT_TOKEN)
@@ -18,14 +23,12 @@ bot.use(
 )
 bot.use(conversations())
 
-// Conversations will be registered here after they are created
-// bot.use(createConversation(registerConversation))
-// bot.use(createConversation(rejectDonationConversation))
-// bot.use(createConversation(addDonorConversation))
+bot.use(createConversation(registerConversation))
+bot.use(createConversation(rejectDonationConversation))
+bot.use(createConversation(addDonorConversation))
 
-// Handlers will be wired here
-// userHandlers(bot)
-// adminHandlers(bot)
+userHandlers(bot)
+adminHandlers(bot)
 
 bot.catch(errorHandler)
 
