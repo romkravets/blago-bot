@@ -101,8 +101,9 @@ describe('generateAvailableTickets', () => {
     expect(tickets.every((t) => t === 10)).toBe(true)
   })
 
-  it('throws when event does not exist', async () => {
-    await expect(generateAvailableTickets('non-existent-id')).rejects.toThrow('Event not found')
+  it('returns empty array when event does not exist', async () => {
+    const result = await generateAvailableTickets('non-existent-id')
+    expect(result).toEqual([])
   })
 
   it('returns fewer than 5 when almost all tickets are taken', async () => {

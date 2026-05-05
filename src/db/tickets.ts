@@ -2,7 +2,7 @@ import { prisma } from './client'
 
 export async function generateAvailableTickets(eventId: string): Promise<number[]> {
   const event = await prisma.event.findUnique({ where: { id: eventId } })
-  if (!event) throw new Error('Event not found')
+  if (!event) return []
 
   const taken = await prisma.donation.findMany({
     where: {
