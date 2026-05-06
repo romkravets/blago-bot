@@ -180,6 +180,12 @@ export async function registerConversation(
       },
     });
 
+    // Захист від подвійного запису при conversation replay
+    const existing = await prisma.donation.findFirst({
+      where: { eventId: activeEventId, userId: user.id, screenshotHash },
+    });
+    if (existing) return { don: existing, user };
+
     const don = await prisma.donation.create({
       data: {
         eventId: activeEventId,
@@ -187,7 +193,6 @@ export async function registerConversation(
         screenshotFileId,
         screenshotHash,
         status: "PENDING",
-        telegramMessageId: BigInt(ctx.message?.message_id ?? 0),
       },
     });
 

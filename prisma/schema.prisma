@@ -52,7 +52,7 @@ model Donation {
   chosenTicket      Int?
   external          Boolean    @default(false)
   suspicious        Boolean    @default(false)
-  telegramMessageId BigInt?    @unique
+  telegramMessageId BigInt?
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
   event             Event      @relation(fields: [eventId], references: [id])
