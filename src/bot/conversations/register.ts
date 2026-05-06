@@ -133,7 +133,7 @@ export async function registerConversation(
       continue;
     }
 
-    if (photo.file_size && photo.file_size < 50_000) {
+    if (photo.file_size && photo.file_size < 10_000) {
       await photoCtx.reply(
         "❌ Скріншот виглядає некоректно. Надішліть повний скріншот з банківського додатку.",
       );
