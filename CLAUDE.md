@@ -565,7 +565,8 @@ process.once('SIGTERM', async () => {
 git clone https://github.com/... /opt/blago-bot
 cd /opt/blago-bot
 npm install
-npx prisma migrate deploy
+npx prisma generate
+npx prisma db push
 npm run build
 pm2 start dist/index.js --name blago-bot
 pm2 save
