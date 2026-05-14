@@ -35,7 +35,7 @@ export const adminMenuKeyboard = new Keyboard()
   .text('⏳ Очікують').text('📊 Статистика').row()
   .text('👤 Додати донора').text('📤 Експорт').row()
   .text('🎯 Новий розіграш').text('✏️ Змінити пул').row()
-  .text('⚙️ Налаштування')
+  .text('📋 Розіграші').text('⚙️ Налаштування')
   .resized()
   .persistent()
 

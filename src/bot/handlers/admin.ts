@@ -1,4 +1,4 @@
-import { Bot, InputFile } from 'grammy'
+import { Bot, InputFile, InlineKeyboard } from 'grammy'
 import { prisma } from '../../db/client'
 import { getConfig, setConfig } from '../../db/configStore'
 import { generateAvailableTickets, hasAvailableTickets } from '../../db/tickets'
@@ -190,6 +190,81 @@ export function adminHandlers(bot: Bot<MyContext>): void {
 
   bot.command('add_donor', requireAdmin, handleAddDonor)
   bot.hears('👤 Додати донора', requireAdmin, handleAddDonor)
+
+  // ── 📋 Розіграші — список + активація ─────────────────────────────
+  async function handleRaffleList(ctx: MyContext): Promise<void> {
+    const activeEventId = await getConfig('activeEventId')
+
+    const events = await prisma.event.findMany({
+      orderBy: { createdAt: 'desc' },
+    })
+
+    if (events.length === 0) {
+      await ctx.reply('Немає жодного розіграшу.')
+      return
+    }
+
+    const stats = await Promise.all(
+      events.map((e) =>
+        prisma.donation.count({
+          where: { eventId: e.id, status: { in: ['PENDING', 'APPROVED'] } },
+        }),
+      ),
+    )
+
+    const statusIcon = (s: string) =>
+      s === 'ACTIVE' ? '🟢' : s === 'CLOSED' ? '⚪' : '🔴'
+
+    const lines = events.map(
+      (e, i) =>
+        `${statusIcon(e.status)} ${e.title}\n` +
+        `   Учасників: ${stats[i]} / ${e.maxTickets}  •  ${e.status === 'ACTIVE' ? 'Активний' : e.status === 'CLOSED' ? 'Закритий' : 'Скасований'}`,
+    )
+
+    const inlineKb = new InlineKeyboard()
+    events.forEach((e) => {
+      if (e.id !== activeEventId) {
+        inlineKb.text(`🔄 ${e.title}`, `activate_raffle:${e.id}`).row()
+      }
+    })
+
+    await ctx.reply(
+      `📋 Всі розіграші (${events.length}):\n\n${lines.join('\n\n')}` +
+        (events.some((e) => e.id !== activeEventId)
+          ? '\n\nОберіть розіграш для активації:'
+          : ''),
+      { reply_markup: inlineKb },
+    )
+  }
+
+  bot.command('raffles', requireAdmin, handleRaffleList)
+  bot.hears('📋 Розіграші', requireAdmin, handleRaffleList)
+
+  // ── activate_raffle callback ───────────────────────────────────────
+  bot.callbackQuery(/^activate_raffle:(.+)$/, requireSuperAdmin, async (ctx) => {
+    const eventId = ctx.match[1]
+
+    const event = await prisma.event.findUnique({ where: { id: eventId } })
+    if (!event) { await ctx.answerCallbackQuery('Розіграш не знайдено'); return }
+
+    const currentActiveId = await getConfig('activeEventId')
+    if (currentActiveId && currentActiveId !== eventId) {
+      await prisma.event.update({
+        where: { id: currentActiveId },
+        data: { status: 'CLOSED' },
+      })
+    }
+
+    await prisma.event.update({ where: { id: eventId }, data: { status: 'ACTIVE' } })
+    await setConfig('activeEventId', eventId)
+
+    await ctx.answerCallbackQuery(`✅ Активовано: ${event.title}`)
+    await ctx.editMessageText(
+      `✅ Активовано розіграш:\n\n🎟 ${event.title}\nПул: ${event.maxTickets} номерків\n\nОновіть список — натисніть "📋 Розіграші"`,
+    )
+
+    logger.info({ eventId, title: event.title, adminId: ctx.from.id }, 'Raffle activated')
+  })
 
   // ── 🎯 Новий розіграш ─────────────────────────────────────────────
   bot.hears('🎯 Новий розіграш', requireSuperAdmin, async (ctx) => {
