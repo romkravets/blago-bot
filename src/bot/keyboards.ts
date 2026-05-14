@@ -42,7 +42,7 @@ export const adminMenuKeyboard = new Keyboard()
 // ── Registration keyboards ────────────────────────────────────────────
 
 export const phoneWithBackKeyboard = new Keyboard()
-  .requestContact('📱 Поділитися номером').row()
+  .requestContact('📞 Поділитися номером').row()
   .text('⬅️ Назад').text('❌ Скасувати')
   .resized()
   .oneTime()
