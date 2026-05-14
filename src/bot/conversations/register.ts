@@ -120,7 +120,7 @@ async function runRegistrationFlow(
     // ── Step 2: Phone ──────────────────────────────────────────────
     else if (step === 2) {
       await ctx.reply(
-        "📋 Крок 2 з 3 — Номер телефону\n\nНатисніть кнопку щоб поділитися номером\n\n💡 Це потрібно щоб ми могли зв'язатись з переможцем",
+        "📋 Крок 2 з 3 — Номер телефону\n\nНатисніть кнопку 📱 або введіть номер вручну\n\nПриклад: +380501234567\n\n💡 Номер потрібен щоб зв'язатись з переможцем",
         { reply_markup: phoneWithBackKeyboard },
       )
 
@@ -132,7 +132,7 @@ async function runRegistrationFlow(
         if (text === '❌ Скасувати') {
           if (await confirmCancel(conversation, ctx)) return null
           await ctx.reply(
-            '📋 Крок 2 з 3 — Номер телефону\n\nНатисніть кнопку щоб поділитися номером',
+            '📋 Крок 2 з 3 — Номер телефону\n\nНатисніть кнопку 📱 або введіть номер вручну',
             { reply_markup: phoneWithBackKeyboard },
           )
           continue
@@ -144,14 +144,24 @@ async function runRegistrationFlow(
           break
         }
 
-        if (!update.message?.contact) {
-          await update.reply('Натисніть кнопку 📱 нижче щоб поділитися номером.')
+        if (update.message?.contact) {
+          phone = update.message.contact.phone_number
+          step = 3
+          break
+        }
+
+        if (text) {
+          const cleaned = text.replace(/[\s\-\(\)\.]/g, '')
+          if (/^\+?[0-9]{7,15}$/.test(cleaned)) {
+            phone = cleaned.startsWith('+') ? cleaned : `+${cleaned}`
+            step = 3
+            break
+          }
+          await update.reply('Невірний формат. Введіть номер у форматі +380501234567 або скористайтесь кнопкою 📱.')
           continue
         }
 
-        phone = update.message.contact.phone_number
-        step = 3
-        break
+        await update.reply('Натисніть кнопку 📱 або введіть номер вручну.')
       }
 
       if (wentBack) continue
