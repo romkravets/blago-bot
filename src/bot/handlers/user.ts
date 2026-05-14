@@ -45,6 +45,12 @@ export function userHandlers(bot: Bot<MyContext>): void {
   // ── 🎟 Взяти участь ───────────────────────────────────────────────
   bot.hears('🎟 Взяти участь', rateLimit, async (ctx) => {
     const telegramId = BigInt(ctx.from!.id)
+
+    if (await checkIsAdmin(telegramId)) {
+      await ctx.reply('Адміни не реєструються як учасники.')
+      return
+    }
+
     const activeEventId = await getConfig('activeEventId')
 
     if (!activeEventId) {

@@ -60,6 +60,40 @@ export function adminHandlers(bot: Bot<MyContext>): void {
     logger.info({ donationId, adminId: ctx.from.id }, 'Donation approved')
   })
 
+  // ── Delete callback ───────────────────────────────────────────────
+  bot.callbackQuery(/^delete:(.+)$/, requireAdmin, async (ctx) => {
+    const donationId = ctx.match[1]
+    const donation = await prisma.donation.findUnique({
+      where: { id: donationId },
+      include: { user: true },
+    })
+
+    if (!donation) { await ctx.answerCallbackQuery('Запит не знайдено'); return }
+    if (donation.status !== 'PENDING') {
+      await ctx.answerCallbackQuery('Можна видаляти тільки PENDING запити')
+      return
+    }
+
+    await prisma.auditLog.deleteMany({ where: { donationId } })
+    await prisma.donation.delete({ where: { id: donationId } })
+
+    await ctx.answerCallbackQuery('Видалено ✅')
+    await ctx.editMessageCaption({
+      caption: `🗑️ Видалено адміном @${ctx.from.username ?? ctx.from.id}`,
+    })
+
+    try {
+      await ctx.api.sendMessage(
+        Number(donation.user.telegramId),
+        '🗑️ Ваш запит видалено адміністратором. Ви можете подати новий — натисніть "🎟 Взяти участь".',
+      )
+    } catch (err) {
+      logger.error({ err }, 'Failed to notify user about deletion')
+    }
+
+    logger.info({ donationId, adminId: ctx.from.id }, 'Donation deleted by admin')
+  })
+
   // ── Reject callback ───────────────────────────────────────────────
   bot.callbackQuery(/^reject:(.+)$/, requireAdmin, async (ctx) => {
     const donationId = ctx.match[1]
@@ -156,6 +190,16 @@ export function adminHandlers(bot: Bot<MyContext>): void {
 
   bot.command('add_donor', requireAdmin, handleAddDonor)
   bot.hears('👤 Додати донора', requireAdmin, handleAddDonor)
+
+  // ── 🎯 Новий розіграш ─────────────────────────────────────────────
+  bot.hears('🎯 Новий розіграш', requireSuperAdmin, async (ctx) => {
+    await ctx.conversation.enter('newRaffleConversation')
+  })
+
+  // ── ✏️ Змінити пул ────────────────────────────────────────────────
+  bot.hears('✏️ Змінити пул', requireAdmin, async (ctx) => {
+    await ctx.conversation.enter('setTicketsConversation')
+  })
 
   // ── /add_admin ────────────────────────────────────────────────────
   bot.command('add_admin', requireSuperAdmin, async (ctx) => {

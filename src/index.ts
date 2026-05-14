@@ -1,8 +1,10 @@
 import { conversations, createConversation } from "@grammyjs/conversations";
 import { Bot, session } from "grammy";
 import { addDonorConversation } from "./bot/conversations/addDonor";
+import { newRaffleConversation } from "./bot/conversations/newRaffle";
 import { registerConversation } from "./bot/conversations/register";
 import { rejectDonationConversation } from "./bot/conversations/rejectDonation";
+import { setTicketsConversation } from "./bot/conversations/setTickets";
 import { adminHandlers } from "./bot/handlers/admin";
 import { userHandlers } from "./bot/handlers/user";
 import { errorHandler } from "./bot/middlewares/errorHandler";
@@ -24,6 +26,8 @@ bot.use(conversations());
 bot.use(createConversation(registerConversation));
 bot.use(createConversation(rejectDonationConversation));
 bot.use(createConversation(addDonorConversation));
+bot.use(createConversation(newRaffleConversation));
+bot.use(createConversation(setTicketsConversation));
 
 userHandlers(bot);
 adminHandlers(bot);
