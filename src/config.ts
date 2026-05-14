@@ -8,3 +8,4 @@ const schema = z.object({
 })
 
 export const config = schema.parse(process.env)
+export const GROUP_LINK = 'https://t.me/+fXPZISsE5bQ4ZWVi'
